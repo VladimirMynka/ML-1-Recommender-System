@@ -1,21 +1,78 @@
+import logging
 from pathlib import Path
+from tqdm import tqdm
+from typing import Optional
+
+import fire
+import numpy as np
+import pandas as pd
+from sklearn.preprocessing import LabelEncoder
+from scipy.sparse.linalg import svds
+
+from src.utils import read_files
+from src.config import config
+
+logging.basicConfig(filename='example.log', encoding='utf-8')
+
 
 class My_Rec_Model:
-    def __init__(self) -> None:
-        pass
+    def __init__(self):
+        self.n_movies: int = 0
+        self.n_users: int = 0
+        self.users_le: Optional[LabelEncoder] = None
+        self.movies_le: Optional[LabelEncoder] = None
+        self.users_means: Optional[np.ndarray] = None
+        self.vt: Optional[np.ndarray] = None
+        self.s: Optional[np.ndarray] = None
+        self.u: Optional[np.ndarray] = None
+        self.df_users, self.df_movies = read_files(["users", "movies"], [None, None])
 
-    def train(self, train_path: Path) -> None:
+    def train(
+        self,
+        train_path: Path = None,
+        movies_path: Path = None,
+        users_path: Path = None,
+        save_path: Path = None,
+        d: int = 35
+    ) -> None:
         """
-        Recieves the dataset filename. Performes model training. Saves the artifacts to ./model/. Logs the results.
-
+        Recieves the dataset filename. Performs model training. Saves the artifacts to ./model/. Logs the results.
         :param train_path: path to train dataset
+        :param movies_path: path to movies dataset
+        :param users_path: path to users dataset
+        :param save_path: path to save weights
+        :param d: shape of the middle matrix in svd
         """
-        pass
+        data = read_files(["train", "movies", "users"], [train_path, movies_path, users_path])
+        matrix = self._prepare_matrix(data["train"])
+        self.u, self.s, self.vt = svds(matrix, k=d)
+        self.s = np.diag(self.s)
+        self.save()
+
+    def _prepare_matrix(self, train: pd.DataFrame) -> np.ndarray:
+        self._create_encoders(train)
+        matrix = np.full(shape=(self.n_users, self.n_movies), fill_value=np.nan)
+        for row in tqdm(train):
+            matrix[row.user_id, row.movie_id] = row.rating
+        self.users_means = np.nanmean(matrix, axis=1).reshape(-1, 1)
+        matrix /= self.users_means
+        matrix -= 1
+        matrix[np.isnan(matrix)] = 0
+        return matrix
+
+    def _create_encoders(self, train: pd.DataFrame) -> None:
+        self.movies_le = LabelEncoder()
+        self.users_le = LabelEncoder()
+        train['movie_id'] = self.movies_le.fit_transform(train['movie_id'])
+        train['user_id'] = self.users_le.fit_transform(train['user_id'])
+        self.n_users = len(self.users_le.classes_)
+        self.n_movies = len(self.movies_le.classes_)
 
     def evaluate(self, data_path: Path) -> None:
         """
-        Recieves the dataset filename. Loads the model from ./data/model/. Evaluates the model with the provided dataset, prints the results and saves it to the log.
+        Receives the dataset filename. Loads the model from ./data/model/.
 
+        Evaluates the model with the provided dataset, prints the results and saves it to the log.
         :param data_path: path to evaluating data
         """
         pass
@@ -29,24 +86,77 @@ class My_Rec_Model:
 
         :return: recommended movies with estimated rating in the same as input format
         """
-        pass
+        # user_ratings, user_mean = self._prepare_one_user(data)
+        # sims =
 
-    def warmup(self) -> None:
+    def _prepare_one_user(self, data: list):
+        user_ratings = np.full(self.n_movies, fill_value=np.nan)
+        for movie_id, rating in zip(data[0], data[1]):
+            movie_id = self.movies_le.transform(movie_id)
+            user_ratings[movie_id] = rating
+        user_mean = np.nanmean(user_ratings)
+        user_ratings /= user_mean
+        user_ratings -= 1
+        return user_ratings, user_mean
+
+
+    def warmup(self, path: Optional[str | Path] = None) -> None:
         """
         Loads the model from ./data/model/. Refresh if it is already loaded.
+        :param path: path for loading model. Default is config['model']
         """
-        pass
+        self.u = np.load(path / "u.np")
+        self.s = np.load(path / "s.np")
+        self.vt = np.load(path / "vt.np")
+        self.users_means = np.load(path / "users_means.np")
 
-    def find_similar(self, movie_id, N=5) -> list:
+        self.users_le = LabelEncoder()
+        self.movies_le = LabelEncoder()
+        self.users_le.fit(np.load(path / "users_le.np"))
+        self.movies_le.fit(np.load(path / "movies_le.np"))
+
+        self.n_users = len(self.users_le.classes_)
+        self.n_movies = len(self.movies_le.classes_)
+
+    def find_similar(self, movie_id: int, N: int = 5) -> list:
         """
         Returns N (parameter, default=5) most similar movies for input movie_id
-
         :param movie_id: id of a movie for which must be found similar some
+        :param N: count of values will be returned
 
-        :return: Returns list [[movie_id_1, movie_id_2, .., movie_id_N ], [[movie_name_1, movie_name_2, .., movie_name_N]]] Descending sorting by similarity
+        :return: Returns list [
+        [movie_id_1, movie_id_2, .., movie_id_N],
+        [movie_name_1, movie_name_2, .., movie_name_N]
+        ] Descending sorting by similarity
         """
-        pass
+        movie_id = self.movies_le.transform(movie_id)
+        movies_to_movies = self.vt.T @ self.vt  # (M x d) @ (d x M) = M x M
+        indexes = movies_to_movies[movie_id].argsort()[::-1]
+        old_indexes = self.movies_le.inverse_transform(indexes)
+        names = self._get_movies_names(old_indexes)
+        return [
+            old_indexes,
+            names
+        ]
+
+    def _get_movies_names(self, movie_old_ids):
+        return self.df_movies[np.isin(self.df_movies.movie_id, movie_old_ids)]
+
+    def save(self, path: Optional[str | Path] = None) -> None:
+        """
+        Save model weights to data/model
+        :param path: path for saving model. Default is config['model']
+        """
+        if path is None:
+            path = config.model
+        path = Path(path)
+        np.save(str(path / "u.np"), self.u)
+        np.save(str(path / "s.np"), self.s)
+        np.save(str(path / "vt.np"), self.vt)
+        np.save(str(path / "users_means.np"), self.users_means)
+        np.save(str(path / "users_le.np"), self.users_le.classes_)
+        np.save(str(path / "movies_le.np"), self.movies_le.classes_)
 
 
 if __name__ == '__main__':
-    pass
+    fire.Fire(My_Rec_Model)
