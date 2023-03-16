@@ -18,11 +18,11 @@ class model_service:
             self.model.train()
             self.model.save()
             self.model.evaluate()
-            save_credentials(config.credentials.model, {
+            save_credentials({
                 'train_rmse': self.model.train_rmse,
                 'test_rmse': self.model.test_rmse,
                 'model_datetime': str(datetime.now())
-            })
+            }, config.credentials.model)
 
     def get_movie_id_by_name(self, movie_name):
         similarities = self.model.df_movies.title.apply(lambda elem: ratio(movie_name, elem))
