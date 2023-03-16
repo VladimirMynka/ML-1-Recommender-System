@@ -43,6 +43,10 @@ class Model_SVD(Model):
         self.u, self.s, self.vt = svds(matrix, k=d)
         self.s = np.diag(self.s)
 
+        rmse = self._calculate_rmse((matrix + 1) * self.users_means)
+
+        logging.info(f"Trained! Train RMSE: {rmse}")
+
     def _prepare_matrix(self, train: pd.DataFrame) -> np.ndarray:
         self._create_encoders(train)
         matrix = self._create_matrix(train)
@@ -72,12 +76,15 @@ class Model_SVD(Model):
         data = read_files(["test"], [data_path])
         val_matrix = self._create_matrix_for_evaluating(data['test'])
 
+        rmse = self._calculate_rmse(val_matrix)
+        logging.info(f"Validation RMSE: {rmse}")
+
+    def _calculate_rmse(self, val_matrix):
         pred_matrix = (self.u @ self.s @ self.vt)
         pred_matrix += 1
         pred_matrix *= self.users_means
 
-        rmse = np.sqrt(np.nanmean((val_matrix - pred_matrix) ** 2))
-        logging.info(f"Validation RMSE: {rmse}")
+        return np.sqrt(np.nanmean((val_matrix - pred_matrix) ** 2))
 
     def _create_matrix_for_evaluating(self, test_df: pd.DataFrame):
         test_df['user_id'] = self.users_le.transform(test_df['user_id'])
@@ -107,6 +114,7 @@ class Model_SVD(Model):
 
         :return: recommended movies with estimated rating in the same as input format
         """
+        logging.info(f"Predict {top_m} movies...")
         user_norm_ratings, user_mean = self._prepare_one_user(data)  # (movies_count, )
         users_to_movies = self.u @ self.s @ self.vt  # (users_count, movies_count)
 
@@ -123,6 +131,8 @@ class Model_SVD(Model):
         old_ids = self.movies_le.inverse_transform(ids)
         old_ids = old_ids[:top_m]
         ratings = (predicted[ids] + 1) * user_mean
+
+        logging.info("Predicted!")
 
         return [
             old_ids,
@@ -147,6 +157,7 @@ class Model_SVD(Model):
         """
         if path is None:
             path = config.model
+        logging.info(f"Download model from {path}")
         self.u = np.load(f"{path}/u.np.npy")
         self.s = np.load(f"{path}/s.np.npy")
         self.vt = np.load(f"{path}/vt.np.npy")
@@ -171,6 +182,7 @@ class Model_SVD(Model):
         [movie_name_1, movie_name_2, .., movie_name_N]
         ] Descending sorting by similarity
         """
+        logging.info(f"Search {N} similar movies...")
         movie_id = self.movies_le.transform(movie_id)
         movies_to_movies = self.vt.T @ self.vt  # (M x d) @ (d x M) = M x M
         indexes = movies_to_movies[movie_id].argsort()[::-1]
@@ -181,6 +193,7 @@ class Model_SVD(Model):
         old_indexes = old_indexes[:N]
         names = self._get_movies_names(old_indexes)
 
+        logging.info(f"Searched!")
         return [
             old_indexes,
             names
@@ -196,6 +209,7 @@ class Model_SVD(Model):
         """
         if path is None:
             path = config.model
+        logging.info(f"Save model into {path}...")
         path = Path(path)
         np.save(str(path / "u.np"), self.u)
         np.save(str(path / "s.np"), self.s)
