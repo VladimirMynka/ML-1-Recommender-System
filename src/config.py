@@ -42,5 +42,6 @@ config = Config({
             'names': ['user_id', 'movie_id', 'rating', 'timestamp']
         }
     },
-    'model': root_path / 'data' / 'model'
+    'model': root_path / 'data' / 'model',
+    'logging': root_path / 'data' / 'log_file.log'
 })

@@ -6,8 +6,9 @@ import fire
 
 from src.my_models.model import Model
 from src.my_models.model_svd import Model_SVD
+from src.utils import init_logging
 
-logging.basicConfig(filename='example.log', encoding='utf-8')
+init_logging()
 
 
 class My_Rec_Model:
@@ -34,7 +35,7 @@ class My_Rec_Model:
 
     def evaluate(
         self,
-        data_path: Path,
+        data_path: Optional[Path | str] = None,
         load_path: Optional[Path | str] = None,
         **kwargs
     ) -> None:

@@ -1,13 +1,18 @@
 from pathlib import Path
 from typing import List, Optional
+import logging
 
 import pandas as pd
 
-from config import config
+from src.config import config
 
 
 def read_data_file(path, names, **kwargs) -> pd.DataFrame:
-    return pd.read_csv(path, sep="::", engine="python", header=None, names=names, **kwargs)
+    logging.info(f"Try to read file {path}...")
+    try:
+        return pd.read_csv(path, sep="::", engine="python", header=None, names=names, **kwargs)
+    except Exception as e:
+        logging.error(str(e))
 
 
 def read_files(names: List[str], paths: List[Optional[str | Path]]) -> dict[str, pd.DataFrame]:
@@ -17,5 +22,14 @@ def read_files(names: List[str], paths: List[Optional[str | Path]]) -> dict[str,
         if param is not None:
             arguments['path'] = param
         data[name] = read_data_file(**arguments.storage)
-        print(data[name].head())
     return data
+
+
+def init_logging():
+    logging.basicConfig(
+        filename=config.logging,
+        encoding='utf-8',
+        level=logging.INFO,
+        format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
+        datefmt="%d/%b/%Y %H:%M:%S"
+    )
