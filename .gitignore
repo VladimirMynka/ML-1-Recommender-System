@@ -1,2 +1,5 @@
-data/log_file.txt
+data/log_file.log
+data/model
 *.ipynb
+.idea/*
+.ipynb_checkpoints/*

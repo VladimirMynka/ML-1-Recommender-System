@@ -1,0 +1,7 @@
+fire~=0.5.0
+pandas~=1.4.0
+Flask~=2.2.3
+scikit-learn~=1.0.2
+numpy~=1.23.3
+tqdm~=4.62.3
+scipy~=1.8.0
