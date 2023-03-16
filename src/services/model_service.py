@@ -19,8 +19,8 @@ class model_service:
             self.model.save()
             self.model.evaluate()
             save_credentials({
-                'train_rmse': self.model.train_rmse,
-                'test_rmse': self.model.test_rmse,
+                'train_rmse': str(self.model.train_rmse),
+                'test_rmse': str(self.model.test_rmse),
                 'model_datetime': str(datetime.now())
             }, config.credentials.model)
 
