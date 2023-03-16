@@ -24,6 +24,8 @@ class Model_SVD(Model):
         self.vt: Optional[np.ndarray] = None
         self.s: Optional[np.ndarray] = None
         self.u: Optional[np.ndarray] = None
+        self.train_rmse = -1
+        self.test_rmse = -1
 
         data = read_files(["users", "movies"], [None, None])
         self.df_users, self.df_movies = data["users"], data["movies"]
@@ -44,6 +46,7 @@ class Model_SVD(Model):
         self.s = np.diag(self.s)
 
         rmse = self._calculate_rmse((matrix + 1) * self.users_means)
+        self.train_rmse = rmse
 
         logging.info(f"Trained! Train RMSE: {rmse}")
 
@@ -77,6 +80,8 @@ class Model_SVD(Model):
         val_matrix = self._create_matrix_for_evaluating(data['test'])
 
         rmse = self._calculate_rmse(val_matrix)
+        self.test_rmse = rmse
+
         logging.info(f"Validation RMSE: {rmse}")
 
     def _calculate_rmse(self, val_matrix):

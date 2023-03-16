@@ -43,5 +43,12 @@ config = Config({
         }
     },
     'model': root_path / 'data' / 'model',
-    'logging': root_path / 'data' / 'log_file.log'
+    'logging': root_path / 'data' / 'log_file.log',
+    'logging_rows_output': 20,
+
+    'credentials': {
+        'model': root_path / 'model_credentials.txt',
+        'common': root_path / 'credentials.txt',
+        'docker': root_path / 'docker_credentials.txt'
+    }
 })
