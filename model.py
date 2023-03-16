@@ -75,17 +75,19 @@ class My_Rec_Model:
         """
         self.model.warmup(path)
 
-    def find_similar(self, movie_id: int, N: int = 5) -> list:
+    def find_similar(self, movie_id: int, N: int = 5, load_path: Optional[str | Path] = None) -> list:
         """
         Returns N (parameter, default=5) most similar movies for input movie_id
         :param movie_id: id of a movie for which must be found similar some
         :param N: count of values will be returned
+        :param load_path: path to load model
 
         :return: Returns list [
         [movie_id_1, movie_id_2, .., movie_id_N],
         [movie_name_1, movie_name_2, .., movie_name_N]
         ] Descending sorting by similarity
         """
+        self.model.warmup(load_path)
         return self.model.find_similar(movie_id, N)
 
     def save(self, path: Optional[str | Path] = None) -> None:
