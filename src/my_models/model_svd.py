@@ -196,7 +196,7 @@ class Model_SVD(Model):
 
         old_indexes = self.movies_le.inverse_transform(indexes)
         old_indexes = old_indexes[:N]
-        names = self._get_movies_names(old_indexes)
+        names = self.get_movies_names(old_indexes)
 
         logging.info(f"Searched!")
         return [
@@ -204,7 +204,7 @@ class Model_SVD(Model):
             names
         ]
 
-    def _get_movies_names(self, movie_old_ids):
+    def get_movies_names(self, movie_old_ids):
         return self.df_movies[np.isin(self.df_movies.movie_id, movie_old_ids)]
 
     def save(self, path: Optional[str | Path] = None) -> None:

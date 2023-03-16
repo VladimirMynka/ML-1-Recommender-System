@@ -31,6 +31,13 @@ class model_service:
         movies_copy = movies_copy.sort_values('sims', ascending=False)
         return movies_copy.iloc[0]['movie_id']
 
+    def predict(self, data, top_m):
+        movie_names, ratings = data
+        movie_ids = [self.get_movie_id_by_name(movie_name) for movie_name in movie_names]
+        movie_new_ids, ratings = self.model.predict([movie_ids, ratings], top_m)
+        movie_names = self.model.get_movies_names(movie_new_ids)
+        return [movie_names, movie_ids]
+
     def get_similar_by_name(self, movie_name, n=5):
         movie_id = self.get_movie_id_by_name(movie_name)
         return self.model.find_similar(movie_id, n)

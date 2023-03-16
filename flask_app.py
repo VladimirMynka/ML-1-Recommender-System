@@ -21,7 +21,7 @@ def predict():
     data = args.get("data")
     top_m = args.get("top_m")
 
-    return jsonify(model_service.model.predict(data, top_m))
+    return jsonify(model_service.predict(data, top_m))
 
 
 @app.route('/api/log', methods=["GET"])
