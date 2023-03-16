@@ -38,6 +38,6 @@ class model_service:
         movie_names = self.model.get_movies_names(movie_new_ids)
         return [movie_names, movie_ids]
 
-    def get_similar_by_name(self, movie_name, n=5):
+    def get_similar_by_name(self, movie_name, n=20):
         movie_id = self.get_movie_id_by_name(movie_name)
         return self.model.find_similar(movie_id, n)

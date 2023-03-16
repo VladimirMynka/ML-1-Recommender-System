@@ -188,7 +188,7 @@ class Model_SVD(Model):
         ] Descending sorting by similarity
         """
         logging.info(f"Search {N} similar movies...")
-        movie_id = self.movies_le.transform(movie_id)
+        movie_id = self.movies_le.transform([movie_id])
         movies_to_movies = self.vt.T @ self.vt  # (M x d) @ (d x M) = M x M
         indexes = movies_to_movies[movie_id].argsort()[::-1]
 
