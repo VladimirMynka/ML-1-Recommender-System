@@ -33,3 +33,19 @@ def init_logging():
         format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
         datefmt="%d/%b/%Y %H:%M:%S"
     )
+
+
+def parse_credentials(path):
+    with path.open('r') as f:
+        text = f.read()
+    lines = text.split('\n')
+    lines = [line.split(': ') for line in lines]
+    result = {line[0]: line[1] for line in lines}
+    return result
+
+
+def save_credentials(dictionary, path):
+    lines = [": ".join([key, dictionary[key]]) for key in dictionary]
+    text = "\n".join(lines)
+    with path.open('w') as f:
+        f.write(text)

@@ -1,28 +1,62 @@
-from flask import Flask
-from model import My_Rec_Model
+import logging
+
+from flask import Flask, request, jsonify
+
+from src.utils import init_logging, parse_credentials
+from src.config import config
+from src.services.model_service import model_service
+from src.services.log_service import Log_Service
+
+init_logging()
+model_service = model_service()
+log_service = Log_Service()
 
 app = Flask(__name__)
+app.logger = logging.getLogger()
 
-@app.route('/api/predict')
+
+@app.route('/api/predict', methods=["POST"])
 def predict():
-    pass
+    args = request.args
+    data = args.get("data")
+    top_m = args.get("top_m")
+
+    return jsonify(model_service.predict(data, top_m))
 
 
-@app.route('/api/log')
+@app.route('/api/log', methods=["GET"])
 def log():
-    pass
+    logs = log_service.get_log_rows()
+    return jsonify({"logs": logs})
 
 
-@app.route('/api/info')
+@app.route('/api/info', methods=["GET"])
 def info():
-    pass
+    credentials = {}
+    for key in config.credentials.storage:
+        credentials.update(parse_credentials(config.credentials[key]))
+    return jsonify(credentials)
 
 
-@app.route('/api/reload')
-def predict():
-    pass
+@app.route('/api/reload', methods=["GET"])
+def reload():
+    model_service.model.warmup()
+    return jsonify({"message": "Model reloaded"})
 
 
-@app.route('/api/similar')
+@app.route('/api/similar', methods=["POST"])
 def similar():
-    pass
+    args = request.args
+    data = args.get("movie_name")
+    top_m = args.get("n")
+
+    return jsonify(model_service.get_similar_by_name(data, top_m))
+
+
+@app.errorhandler(500)
+def some_error(e):
+    logging.info(str(e))
+    return str(e), 500
+
+
+app.run("0.0.0.0", port=5017)
