@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from config import config
+from src.config import config
 
 
 class Log_Service:
