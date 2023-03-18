@@ -52,7 +52,7 @@ def similar():
     data = args.get("movie_name")
     top_m = args.get("n")
 
-    return jsonify(model_service.get_similar_by_name(data, top_m))
+    return jsonify(model_service.get_similar_by_name(data, top_m)[1])
 
 
 @app.errorhandler(500)

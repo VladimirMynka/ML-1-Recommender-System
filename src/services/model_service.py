@@ -36,7 +36,7 @@ class model_service:
         movie_ids = [self.get_movie_id_by_name(movie_name) for movie_name in movie_names]
         movie_new_ids, ratings = self.model.predict([movie_ids, ratings], top_m)
         movie_names = self.model.get_movies_names(movie_new_ids)
-        return [movie_names, movie_ids]
+        return [movie_names.tolist(), ratings]
 
     def get_similar_by_name(self, movie_name, n=20):
         movie_id = self.get_movie_id_by_name(movie_name)
