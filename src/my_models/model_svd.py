@@ -140,8 +140,8 @@ class Model_SVD(Model):
         logging.info("Predicted!")
 
         return [
-            list(old_ids),
-            list(ratings)
+            old_ids.tolist(),
+            ratings.tolist()
         ]
 
     def _prepare_one_user(self, data: list) -> (np.ndarray, float):
@@ -195,17 +195,17 @@ class Model_SVD(Model):
         indexes = indexes[indexes != movie_id]
 
         old_indexes = self.movies_le.inverse_transform(indexes)
-        old_indexes = list(old_indexes[:N])
+        old_indexes = old_indexes[:N]
         names = self.get_movies_names(old_indexes)
 
         logging.info(f"Searched!")
         return [
-            old_indexes,
-            names
+            old_indexes.tolist(),
+            names.tolist()
         ]
 
     def get_movies_names(self, movie_old_ids):
-        return list(self.df_movies[np.isin(self.df_movies.movie_id, movie_old_ids)].title)
+        return self.df_movies[np.isin(self.df_movies.movie_id, movie_old_ids)].title.values
 
     def save(self, path: Optional[str | Path] = None) -> None:
         """
