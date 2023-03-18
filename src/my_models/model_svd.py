@@ -1,16 +1,16 @@
 import logging
 from pathlib import Path
 from typing import Optional
-from tqdm import tqdm
 
 import numpy as np
 import pandas as pd
 from scipy.sparse.linalg import svds
 from sklearn.preprocessing import LabelEncoder
+from tqdm import tqdm
 
-from src.utils import read_files
 from src.config import config
 from src.my_models.model import Model
+from src.utils import read_files
 
 
 class Model_SVD(Model):
@@ -121,6 +121,7 @@ class Model_SVD(Model):
         """
         logging.info(f"Predict {top_m} movies...")
         user_norm_ratings, user_mean = self._prepare_one_user(data)  # (movies_count, )
+
         users_to_movies = self.u @ self.s @ self.vt  # (users_count, movies_count)
 
         normalizer = np.sqrt((users_to_movies ** 2).sum(axis=1))
@@ -129,19 +130,19 @@ class Model_SVD(Model):
         users_sims = user_norm_ratings.reshape((1, -1)) @ users_to_movies.transpose((1, 0)) / normalizer
 
         predicted = (users_sims.reshape(-1, 1) * users_to_movies).sum(axis=0) / users_sims.sum()
-        ids = np.argsort(predicted)[::-1]
-        np.delete(ids, self.movies_le.transform(data[0]))
-        ids = ids[:top_m]
+
+        ids = np.argsort(predicted)[::-1]  # top ids
+        ids = ids[~np.isin(ids, self.movies_le.transform(data[0]))]  # drop already marked movies
+        ids = ids[:top_m]  # only first top_m
 
         old_ids = self.movies_le.inverse_transform(ids)
-        old_ids = old_ids[:top_m]
         ratings = (predicted[ids] + 1) * user_mean
 
         logging.info("Predicted!")
 
         return [
-            old_ids,
-            ratings
+            old_ids.tolist(),
+            ratings.tolist()
         ]
 
     def _prepare_one_user(self, data: list) -> (np.ndarray, float):
@@ -188,11 +189,11 @@ class Model_SVD(Model):
         ] Descending sorting by similarity
         """
         logging.info(f"Search {N} similar movies...")
-        movie_id = self.movies_le.transform(movie_id)
+        movie_id = self.movies_le.transform([movie_id])[0]
         movies_to_movies = self.vt.T @ self.vt  # (M x d) @ (d x M) = M x M
         indexes = movies_to_movies[movie_id].argsort()[::-1]
 
-        np.delete(indexes, movie_id)
+        indexes = indexes[indexes != movie_id]
 
         old_indexes = self.movies_le.inverse_transform(indexes)
         old_indexes = old_indexes[:N]
@@ -200,12 +201,15 @@ class Model_SVD(Model):
 
         logging.info(f"Searched!")
         return [
-            old_indexes,
-            names
+            old_indexes.tolist(),
+            names.tolist()
         ]
 
     def get_movies_names(self, movie_old_ids):
-        return self.df_movies[np.isin(self.df_movies.movie_id, movie_old_ids)]
+        movies = self.df_movies[np.isin(self.df_movies.movie_id, movie_old_ids)]
+        movies = movies.set_index("movie_id")
+        movies = movies.loc[movie_old_ids]
+        return movies.title.values
 
     def save(self, path: Optional[str | Path] = None) -> None:
         """

@@ -1,11 +1,11 @@
 import logging
 from datetime import datetime
 
+from fuzzywuzzy.fuzz import ratio
+
+from src.config import config
 from src.my_models.model_svd import Model_SVD
 from src.utils import save_credentials
-from src.config import config
-
-from fuzzywuzzy.fuzz import ratio
 
 
 class model_service:
@@ -36,8 +36,8 @@ class model_service:
         movie_ids = [self.get_movie_id_by_name(movie_name) for movie_name in movie_names]
         movie_new_ids, ratings = self.model.predict([movie_ids, ratings], top_m)
         movie_names = self.model.get_movies_names(movie_new_ids)
-        return [movie_names, movie_ids]
+        return [movie_names.tolist(), ratings]
 
-    def get_similar_by_name(self, movie_name, n=5):
+    def get_similar_by_name(self, movie_name, n=20):
         movie_id = self.get_movie_id_by_name(movie_name)
         return self.model.find_similar(movie_id, n)

@@ -2,10 +2,10 @@ import logging
 
 from flask import Flask, request, jsonify
 
-from src.utils import init_logging, parse_credentials
 from src.config import config
-from src.services.model_service import model_service
 from src.services.log_service import Log_Service
+from src.services.model_service import model_service
+from src.utils import init_logging, parse_credentials
 
 init_logging()
 model_service = model_service()
@@ -17,7 +17,7 @@ app.logger = logging.getLogger()
 
 @app.route('/api/predict', methods=["POST"])
 def predict():
-    args = request.args
+    args = request.json
     data = args.get("data")
     top_m = args.get("top_m")
 
@@ -26,7 +26,9 @@ def predict():
 
 @app.route('/api/log', methods=["GET"])
 def log():
-    logs = log_service.get_log_rows()
+    args = request.args
+    lines = int(args.get("n", default=20))
+    logs = log_service.get_log_rows(lines)
     return jsonify({"logs": logs})
 
 
@@ -38,7 +40,7 @@ def info():
     return jsonify(credentials)
 
 
-@app.route('/api/reload', methods=["GET"])
+@app.route('/api/reload', methods=["POST"])
 def reload():
     model_service.model.warmup()
     return jsonify({"message": "Model reloaded"})
@@ -46,17 +48,17 @@ def reload():
 
 @app.route('/api/similar', methods=["POST"])
 def similar():
-    args = request.args
+    args = request.json
     data = args.get("movie_name")
     top_m = args.get("n")
 
-    return jsonify(model_service.get_similar_by_name(data, top_m))
+    return jsonify(model_service.get_similar_by_name(data, top_m)[1])
 
 
 @app.errorhandler(500)
 def some_error(e):
     logging.info(str(e))
-    return str(e), 500
+    return f"Hehe! Check: {e}", 500
 
 
 app.run("0.0.0.0", port=5017)
