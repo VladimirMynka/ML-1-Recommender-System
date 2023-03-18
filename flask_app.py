@@ -27,7 +27,7 @@ def predict():
 @app.route('/api/log', methods=["GET"])
 def log():
     args = request.args
-    lines = args.get("n", default=20)
+    lines = int(args.get("n", default=20))
     logs = log_service.get_log_rows(lines)
     return jsonify({"logs": logs})
 
