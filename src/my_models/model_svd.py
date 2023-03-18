@@ -121,6 +121,7 @@ class Model_SVD(Model):
         """
         logging.info(f"Predict {top_m} movies...")
         user_norm_ratings, user_mean = self._prepare_one_user(data)  # (movies_count, )
+
         users_to_movies = self.u @ self.s @ self.vt  # (users_count, movies_count)
 
         normalizer = np.sqrt((users_to_movies ** 2).sum(axis=1))
@@ -129,12 +130,12 @@ class Model_SVD(Model):
         users_sims = user_norm_ratings.reshape((1, -1)) @ users_to_movies.transpose((1, 0)) / normalizer
 
         predicted = (users_sims.reshape(-1, 1) * users_to_movies).sum(axis=0) / users_sims.sum()
-        ids = np.argsort(predicted)[::-1]
-        ids = ids[~np.isin(ids, self.movies_le.transform(data[0]))]
-        ids = ids[:top_m]
+
+        ids = np.argsort(predicted)[::-1]  # top ids
+        ids = ids[~np.isin(ids, self.movies_le.transform(data[0]))]  # drop already marked movies
+        ids = ids[:top_m]  # only first top_m
 
         old_ids = self.movies_le.inverse_transform(ids)
-        old_ids = old_ids[:top_m]
         ratings = (predicted[ids] + 1) * user_mean
 
         logging.info("Predicted!")
