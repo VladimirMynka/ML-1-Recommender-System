@@ -130,7 +130,7 @@ class Model_SVD(Model):
 
         predicted = (users_sims.reshape(-1, 1) * users_to_movies).sum(axis=0) / users_sims.sum()
         ids = np.argsort(predicted)[::-1]
-        np.delete(ids, self.movies_le.transform(data[0]))
+        ids = ids[~np.isin(ids, self.movies_le.transform(data[0]))]
         ids = ids[:top_m]
 
         old_ids = self.movies_le.inverse_transform(ids)
@@ -205,7 +205,10 @@ class Model_SVD(Model):
         ]
 
     def get_movies_names(self, movie_old_ids):
-        return self.df_movies[np.isin(self.df_movies.movie_id, movie_old_ids)].title.values
+        movies = self.df_movies[np.isin(self.df_movies.movie_id, movie_old_ids)]
+        movies = movies.set_index("movie_id")
+        movies = movies.loc[movie_old_ids]
+        return movies.title.values
 
     def save(self, path: Optional[str | Path] = None) -> None:
         """
