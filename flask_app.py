@@ -2,10 +2,10 @@ import logging
 
 from flask import Flask, request, jsonify
 
-from src.utils import init_logging, parse_credentials
 from src.config import config
-from src.services.model_service import model_service
 from src.services.log_service import Log_Service
+from src.services.model_service import model_service
+from src.utils import init_logging, parse_credentials
 
 init_logging()
 model_service = model_service()

@@ -1,11 +1,11 @@
 import logging
 from datetime import datetime
 
+from fuzzywuzzy.fuzz import ratio
+
+from src.config import config
 from src.my_models.model_svd import Model_SVD
 from src.utils import save_credentials
-from src.config import config
-
-from fuzzywuzzy.fuzz import ratio
 
 
 class model_service:

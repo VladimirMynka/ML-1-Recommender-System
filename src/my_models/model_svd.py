@@ -1,16 +1,16 @@
 import logging
 from pathlib import Path
 from typing import Optional
-from tqdm import tqdm
 
 import numpy as np
 import pandas as pd
 from scipy.sparse.linalg import svds
 from sklearn.preprocessing import LabelEncoder
+from tqdm import tqdm
 
-from src.utils import read_files
 from src.config import config
 from src.my_models.model import Model
+from src.utils import read_files
 
 
 class Model_SVD(Model):
