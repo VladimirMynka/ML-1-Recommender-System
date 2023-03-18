@@ -58,7 +58,7 @@ def similar():
 @app.errorhandler(500)
 def some_error(e):
     logging.info(str(e))
-    return str(e), 500
+    return f"Hehe! Check: {e}", 500
 
 
 app.run("0.0.0.0", port=5017)
