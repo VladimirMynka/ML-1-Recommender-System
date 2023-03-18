@@ -188,11 +188,11 @@ class Model_SVD(Model):
         ] Descending sorting by similarity
         """
         logging.info(f"Search {N} similar movies...")
-        movie_id = self.movies_le.transform([movie_id])
+        movie_id = self.movies_le.transform([movie_id])[0]
         movies_to_movies = self.vt.T @ self.vt  # (M x d) @ (d x M) = M x M
         indexes = movies_to_movies[movie_id].argsort()[::-1]
 
-        np.delete(indexes, movie_id)
+        indexes = indexes[indexes != movie_id]
 
         old_indexes = self.movies_le.inverse_transform(indexes)
         old_indexes = old_indexes[:N]
@@ -205,7 +205,7 @@ class Model_SVD(Model):
         ]
 
     def get_movies_names(self, movie_old_ids):
-        return self.df_movies[np.isin(self.df_movies.movie_id, movie_old_ids)]
+        return self.df_movies[np.isin(self.df_movies.movie_id, movie_old_ids)].title.values
 
     def save(self, path: Optional[str | Path] = None) -> None:
         """
