@@ -17,7 +17,7 @@ app.logger = logging.getLogger()
 
 @app.route('/api/predict', methods=["POST"])
 def predict():
-    args = request.args
+    args = request.json
     data = args.get("data")
     top_m = args.get("top_m")
 
@@ -38,7 +38,7 @@ def info():
     return jsonify(credentials)
 
 
-@app.route('/api/reload', methods=["GET"])
+@app.route('/api/reload', methods=["POST"])
 def reload():
     model_service.model.warmup()
     return jsonify({"message": "Model reloaded"})
@@ -46,7 +46,7 @@ def reload():
 
 @app.route('/api/similar', methods=["POST"])
 def similar():
-    args = request.args
+    args = request.json
     data = args.get("movie_name")
     top_m = args.get("n")
 
@@ -59,4 +59,4 @@ def some_error(e):
     return str(e), 500
 
 
-app.run("0.0.0.0", port=5017)
+app.run("127.0.0.1", port=5017)
