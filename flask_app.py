@@ -57,8 +57,8 @@ def similar():
 
 @app.errorhandler(500)
 def some_error(e):
-    logging.info(str(e))
-    return f"Hehe! Check: {e}", 500
+    logging.info(str(e.original_exception))
+    return f"Application Error: {e}", 500
 
 
 if __name__ == "__main__":
