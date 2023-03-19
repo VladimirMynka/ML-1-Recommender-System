@@ -1,4 +1,14 @@
-### Without Docker:
+## Docker:
+```
+docker-compose up -d
+```
+
+If image was changed,
+```
+docker-compose up --build -d
+```
+
+## Without Docker:
 - Create directory `credentials` in the project root with file `credentials.txt` and fill information with fields:
   - Name
   - Surname
@@ -9,6 +19,8 @@
   - `source /path/to/new/virtual/environment/bin/activate`
 - Install requirements:
   - `pip install -r requirements.txt`
+- Get data:
+  - `dvc pull`
 
 ### Flask App
 For testing and debugging
@@ -22,7 +34,6 @@ Will run on port 5000. It can be changed at `src/config` file
 ### WSGI App \[[docs](https://flask.palletsprojects.com/en/2.2.x/deploying/gunicorn)\]
 For production
 
-- ```pip install gunicorn```
 - ```nohup gunicorn -w {n} 'wsgi_app:application' &```, where n is count of processes will be started
 
 As default, it will run on port 8000. To change it, key `-b :{port}`, for example

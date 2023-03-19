@@ -7,3 +7,6 @@ tqdm~=4.62.3
 scipy~=1.8.0
 fuzzywuzzy~=0.18.0
 python-Levenshtein
+dvc
+dvc_gdrive
+gunicorn

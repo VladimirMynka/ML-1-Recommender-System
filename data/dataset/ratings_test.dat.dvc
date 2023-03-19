@@ -1,0 +1,4 @@
+outs:
+- md5: c53fb2528e8ef8342a5bff231b3f5d74
+  size: 1279372
+  path: ratings_test.dat

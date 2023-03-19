@@ -1,0 +1,4 @@
+outs:
+- md5: 67ed87fae636f02b6fbb047ec5e44119
+  size: 24314817
+  path: ratings_train.dat

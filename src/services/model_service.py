@@ -46,6 +46,6 @@ class model_service:
         self.model.warmup()
         self.model.evaluate()
         credentials = parse_credentials(config.credentials.model)
-        credentials['test_rmse'] = self.model.test_rmse
+        credentials['test_rmse'] = str(self.model.test_rmse)
         credentials['model_datetime'] = str(datetime.now())
         save_credentials(credentials, config.credentials.model)

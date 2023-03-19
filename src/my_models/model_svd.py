@@ -40,7 +40,7 @@ class Model_SVD(Model):
         :param train_path: path to train dataset
         :param d: shape of the middle matrix in svd
         """
-        data = read_files(["train", "users", ""], [train_path])
+        data = read_files(["train"], [train_path])
         matrix = self._prepare_matrix(data["train"])
         self.u, self.s, self.vt = svds(matrix, k=d)
         self.s = np.diag(self.s)
@@ -119,6 +119,7 @@ class Model_SVD(Model):
 
         :return: recommended movies with estimated rating in the same as input format
         """
+        self._check_for_predict_data(data)
         logging.info(f"Predict {top_m} movies...")
         user_norm_ratings, user_mean = self._prepare_one_user(data)  # (movies_count, )
 
@@ -145,6 +146,21 @@ class Model_SVD(Model):
             ratings.tolist()
         ]
 
+    def _check_for_predict_data(self, data):
+        if len(data) != 2:
+            logging.error(f"Data is a list of two lists! Two! TWO! Your lists count: {len(data)}")
+            raise ValueError(f"Data is a list of two lists! Two! TWO! Your lists count: {len(data)}")
+        if len(data[0]) != len(data[1]):
+            logging.error(f"Data is a list of two lists with equal length! "
+                          f"Equal! EQUAL! Your lists length: {[len(data[0]), len(data[1])]}")
+            raise ValueError(f"Data is a list of two lists with equal length! "
+                             f"Equal! EQUAL! Your lists length: {[len(data[0]), len(data[1])]}")
+        isin = np.isin(data[0], self.movies_le.classes_)
+        if isin.mean() < 1:
+            unknown = list(np.array(data[0])[~isin])
+            logging.error(f"Unknown movie ids: {unknown}")
+            raise ValueError(f"Unknown movie ids: {unknown}")
+
     def _prepare_one_user(self, data: list) -> (np.ndarray, float):
         user_ratings = np.full(self.n_movies, fill_value=np.nan)
         movie_ids = self.movies_le.transform(data[0])
@@ -163,19 +179,25 @@ class Model_SVD(Model):
         """
         if path is None:
             path = config.model
+        self._check_warmup_path(path)
+
         logging.info(f"Download model from {path}")
-        self.u = np.load(f"{path}/u.np.npy")
-        self.s = np.load(f"{path}/s.np.npy")
-        self.vt = np.load(f"{path}/vt.np.npy")
-        self.users_means = np.load(f"{path}/users_means.np.npy")
+        try:
+            self.u = np.load(f"{path}/u.np.npy")
+            self.s = np.load(f"{path}/s.np.npy")
+            self.vt = np.load(f"{path}/vt.np.npy")
+            self.users_means = np.load(f"{path}/users_means.np.npy")
 
-        self.users_le = LabelEncoder()
-        self.movies_le = LabelEncoder()
-        self.users_le.fit(np.load(f"{path}/users_le.np.npy"))
-        self.movies_le.fit(np.load(f"{path}/movies_le.np.npy"))
+            self.users_le = LabelEncoder()
+            self.movies_le = LabelEncoder()
+            self.users_le.fit(np.load(f"{path}/users_le.np.npy"))
+            self.movies_le.fit(np.load(f"{path}/movies_le.np.npy"))
 
-        self.n_users = len(self.users_le.classes_)
-        self.n_movies = len(self.movies_le.classes_)
+            self.n_users = len(self.users_le.classes_)
+            self.n_movies = len(self.movies_le.classes_)
+        except OSError as e:
+            logging.error("Can't load model", exc_info=e)
+            raise e
 
     def find_similar(self, movie_id: int, N: int = 5) -> list:
         """
@@ -189,6 +211,9 @@ class Model_SVD(Model):
         ] Descending sorting by similarity
         """
         logging.info(f"Search {N} similar movies...")
+        if movie_id not in self.movies_le.classes_:
+            logging.error("Unknown movie_id")
+
         movie_id = self.movies_le.transform([movie_id])[0]
         movies_to_movies = self.vt.T @ self.vt  # (M x d) @ (d x M) = M x M
         indexes = movies_to_movies[movie_id].argsort()[::-1]
@@ -220,6 +245,7 @@ class Model_SVD(Model):
             path = config.model
         logging.info(f"Save model into {path}...")
         path = Path(path)
+        path.mkdir(exist_ok=True)
         np.save(str(path / "u.np"), self.u)
         np.save(str(path / "s.np"), self.s)
         np.save(str(path / "vt.np"), self.vt)
