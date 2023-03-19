@@ -11,6 +11,7 @@ Then there are 4 available methods:
 args:
 - `--train_path` - path to train dataset. Default - from src.config
 - `--save_path` - path to save model. Model will be saved as set of files
+- `--d` - hyperparameter: count of hidden features
 - `--kwargs` - if it is using not svd model
 
 #### evaluate

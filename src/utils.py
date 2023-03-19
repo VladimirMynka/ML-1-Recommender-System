@@ -20,7 +20,11 @@ def read_files(names: List[str], paths: List[Optional[str | Path]]) -> dict[str,
     for name, param in zip(names, paths):
         arguments = config.data[name]
         if param is not None:
+            param = Path(param)
             arguments['path'] = param
+        if not arguments['path'].is_file():
+            logging.error(f"File {arguments['path']} is not file")
+            raise FileNotFoundError(arguments['path'])
         data[name] = read_data_file(**arguments.storage)
     return data
 

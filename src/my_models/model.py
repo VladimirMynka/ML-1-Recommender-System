@@ -1,3 +1,5 @@
+import logging
+import os
 from pathlib import Path
 from typing import Optional
 
@@ -41,6 +43,16 @@ class Model:
         :param path: path for loading model. Default is config['model']
         """
         pass
+
+    @staticmethod
+    def _check_warmup_path(path):
+        path = Path(path)
+        if not path.is_dir():
+            logging.error(f"Directory {path} does not exists")
+            raise NotADirectoryError(f"Directory {path} does not exist")
+        if os.listdir(path) == 0:
+            logging.error(f"Directory {path} is empty")
+            raise ValueError(f"Directory {path} is empty")
 
     def find_similar(self, movie_id: int, N: int = 5) -> list:
         """
