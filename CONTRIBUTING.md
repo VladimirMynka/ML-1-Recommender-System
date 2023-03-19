@@ -1,3 +1,13 @@
+## Docker:
+```
+docker-compose up -d
+```
+
+If image was changed,
+```
+docker-compose up --build -d
+```
+
 ## Without Docker:
 - Create directory `credentials` in the project root with file `credentials.txt` and fill information with fields:
   - Name

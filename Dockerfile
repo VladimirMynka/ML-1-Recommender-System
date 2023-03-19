@@ -8,6 +8,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-RUN  echo "DockerBuildDate: $(date)" > credentials/docker_credentials.txt
+RUN echo "DockerBuildDate: $(date)" > credentials/docker_credentials.txt
 
 CMD [ "gunicorn", "-w", "2", "-b", "0.0.0.0:8000", "wsgi_app:application" ]

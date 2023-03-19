@@ -44,13 +44,15 @@ args:
 ## API
 api address: 2828.ftp.sh:5017
 
-POST: `/api/predict`. Recieves list `[[movie_name_1, movie_name_2, .., movie_name_N ], [rating_1, rating_2, .., rating_N]]` and returns `TOP M` (default 5, also a parameter) recommended movies with corresponding estimated rating. Sort descending. [[movie_name_1, movie_name_2, .., movie_name_M], [rating_1, rating_2, .., rating_M]]
+POST: `/api/predict`. Receives json with `data: [[movie_name_1, movie_name_2, .., movie_name_N ], [rating_1, rating_2, .., rating_N]]` and `top_m: int`, and returns `top_m` (default 5) recommended movies with corresponding estimated rating. Sort descending. `[[movie_name_1, movie_name_2, .., movie_name_M], [rating_1, rating_2, .., rating_M]]`
 
-GET: `/api/log`. Last 20 rows of log.
+GET: `/api/log?n=20`. Last 20 rows of log.
 
-GET: `/api/info`. Service Information: Your Credentials, Date and time of the build of the Docker image, Date, time and metrics of the training of the currently deployed model.
+GET: `/api/info`. Service Information: Credentials, Date and time of the build of the Docker image, Date, time and metrics of the training of the currently deployed model.
 
-GET: `/api/reload`. Reload the model.
+POST: `/api/reload`. Reload the model.
 
-POST: `/api/similar`. returns list of similar movies {"movie_name": "Lord of the Rings"}
+POST: `/api/similar`. Receives json with `"movie_name": string` and `"n": int`. Returns list of n similar movies also as json.
 
+## Docker
+See CONTRIBUTING.md
