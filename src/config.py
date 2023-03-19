@@ -50,7 +50,5 @@ config = Config({
         'model': root_path / 'credentials' / 'model_credentials.txt',
         'common': root_path / 'credentials' / 'credentials.txt',
         'docker': root_path / 'credentials' / 'docker_credentials.txt'
-    },
-
-    'debug_mode': True
+    }
 })

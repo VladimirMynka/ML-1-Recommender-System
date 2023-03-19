@@ -42,7 +42,7 @@ def info():
 
 @app.route('/api/reload', methods=["POST"])
 def reload():
-    model_service.model.warmup()
+    model_service.reload()
     return jsonify({"message": "Model reloaded"})
 
 
@@ -61,4 +61,5 @@ def some_error(e):
     return f"Hehe! Check: {e}", 500
 
 
-app.run("0.0.0.0", port=5017)
+if __name__ == "__main__":
+    app.run("0.0.0.0", port=5017)
