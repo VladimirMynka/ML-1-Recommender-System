@@ -1,3 +1,7 @@
+## Get data
+- `pip install dvc`
+- `dvc pull`
+
 ## CLI
 Download repo by `git clone`
 
