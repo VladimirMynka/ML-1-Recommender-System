@@ -1,0 +1,11 @@
+version: "3"
+services:
+  recomend_system:
+    build: .
+    ports:
+      - "5017:8000"
+    volumes:
+      - "data:/usr/src/app/data"
+
+volumes:
+  data:
