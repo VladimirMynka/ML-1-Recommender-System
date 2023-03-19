@@ -62,4 +62,4 @@ def some_error(e):
 
 
 if __name__ == "__main__":
-    app.run("0.0.0.0", port=5017)
+    app.run("0.0.0.0", port=config.flask_app_port)

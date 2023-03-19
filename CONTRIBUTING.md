@@ -17,8 +17,15 @@ For testing and debugging
 nohup python -m flask_app &
 ```
 
+Will run on port 5000. It can be changed at `src/config` file
+
 ### WSGI App \[[docs](https://flask.palletsprojects.com/en/2.2.x/deploying/gunicorn)\]
 For production
 
 - ```pip install gunicorn```
-- ```gunicorn -w {n} 'wsgi_app:application'```, where n is count of processes will be started
+- ```nohup gunicorn -w {n} 'wsgi_app:application' &```, where n is count of processes will be started
+
+As default, it will run on port 8000. To change it, key `-b :{port}`, for example
+```
+nohup gunicorn -w {n} -b :5017 'wsgi_app:application' &
+```
