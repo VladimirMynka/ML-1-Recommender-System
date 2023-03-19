@@ -44,8 +44,10 @@ def parse_credentials(path):
     return result
 
 
-def save_credentials(dictionary, path):
+def save_credentials(dictionary: dict, path: Path):
     lines = [": ".join([key, dictionary[key]]) for key in dictionary]
     text = "\n".join(lines)
+
+    path.mkdir(parents=True, exist_ok=True)
     with path.open('w') as f:
         f.write(text)

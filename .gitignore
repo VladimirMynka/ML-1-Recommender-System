@@ -3,5 +3,4 @@ data/model
 *.ipynb
 .idea/*
 .ipynb_checkpoints/*
-credentials.txt
-docker_credentials.txt
+credentials/*

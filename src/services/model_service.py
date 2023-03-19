@@ -5,7 +5,7 @@ from fuzzywuzzy.fuzz import ratio
 
 from src.config import config
 from src.my_models.model_svd import Model_SVD
-from src.utils import save_credentials
+from src.utils import save_credentials, parse_credentials
 
 
 class model_service:
@@ -41,3 +41,11 @@ class model_service:
     def get_similar_by_name(self, movie_name, n=20):
         movie_id = self.get_movie_id_by_name(movie_name)
         return self.model.find_similar(movie_id, n)
+
+    def reload(self):
+        self.model.warmup()
+        self.model.evaluate()
+        credentials = parse_credentials(config.credentials.model)
+        credentials['test_rmse'] = self.model.test_rmse
+        credentials['model_datetime'] = str(datetime.now())
+        save_credentials(credentials, config.credentials.model)
