@@ -47,7 +47,7 @@ class Model_SVD(Model):
         self.u, self.s, self.vt = svds(normalized_matrix, k=d)
         self.s = np.diag(self.s)
 
-        rmse = self._calculate_rmse((matrix + 1) * self.users_means)
+        rmse = self._calculate_rmse(matrix)
         self.train_rmse = rmse
 
         logging.info(f"Trained! Train RMSE: {rmse}")
