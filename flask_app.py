@@ -4,11 +4,11 @@ from flask import Flask, request, jsonify
 
 from src.config import config
 from src.services.log_service import Log_Service
-from src.services.model_service import model_service
+from src.services.model_service import Model_Service
 from src.utils import init_logging, parse_credentials
 
 init_logging()
-model_service = model_service()
+model_service = Model_Service()
 log_service = Log_Service()
 
 app = Flask(__name__)
@@ -19,9 +19,10 @@ app.logger = logging.getLogger()
 def predict():
     args = request.json
     data = args.get("data")
-    top_m = args.get("top_m")
+    top_m = args.get("top_m", default=5)
+    predict_type = args.get("predict_type", default='by_movies_to_movies')
 
-    return jsonify(model_service.predict(data, top_m))
+    return jsonify(model_service.predict(data, top_m, predict_type))
 
 
 @app.route('/api/log', methods=["GET"])

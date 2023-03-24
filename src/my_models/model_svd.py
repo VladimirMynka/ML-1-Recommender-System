@@ -112,7 +112,7 @@ class Model_SVD(Model):
 
     def predict(self, data: list, top_m: int, **kwargs) -> list:
         """
-        Get recommend movies for one user
+        Get recommend movies for one user. Do it by users_to_movies matrix
 
         :param data: list `[[movie_id_1, movie_id_2, .., movie_id_N ], [rating_1, rating_2, .., rating_N]]` for one user
         :param top_m: how much recommended movies must be got
@@ -122,22 +122,51 @@ class Model_SVD(Model):
         self._check_for_predict_data(data)
         logging.info(f"Predict {top_m} movies...")
         user_norm_ratings, user_mean = self._prepare_one_user(data)  # (movies_count, )
+        evaluated_movies = self.movies_le.transform(data[0])
 
         users_to_movies = self.u @ self.s @ self.vt  # (users_count, movies_count)
 
-        normalizer = np.sqrt((users_to_movies ** 2).sum(axis=1))
+        normalizer = np.sqrt((users_to_movies ** 2).sum(axis=1))[evaluated_movies]  # length of users vectors
 
-        # (users_count, movies_count) @ (movies_count, 1) = (users_count, 1)
-        users_sims = user_norm_ratings.reshape((1, -1)) @ users_to_movies.transpose((1, 0)) / normalizer
+        # (users_count, only_evaluated_movies) @ (only_evaluated_movies, 1) = (users_count, 1)
+        users_sims = users_to_movies[:, evaluated_movies] \
+                     @ user_norm_ratings[evaluated_movies].reshape((-1, 1)) \
+                     / normalizer.reshape((-1, 1))
 
-        predicted = (users_sims.reshape(-1, 1) * users_to_movies).sum(axis=0) / users_sims.sum()
+        predicted = (users_sims * users_to_movies).sum(axis=0) / users_sims.sum()
 
+        return self._get_top_m_from_predicted(predicted, evaluated_movies, user_mean, top_m)
+
+    def predict2(self, data: list, top_m: int, **kwargs) -> list:
+        """
+        Get recommend movies for one user. Do it by movies_to_movies matrix
+
+        :param data: list `[[movie_id_1, movie_id_2, .., movie_id_N ], [rating_1, rating_2, .., rating_N]]` for one user
+        :param top_m: how much recommended movies must be got
+
+        :return: recommended movies with estimated rating in the same as input format
+        """
+        self._check_for_predict_data(data)
+        logging.info(f"Predict {top_m} movies...")
+        user_norm_ratings, user_mean = self._prepare_one_user(data)  # (movies_count, )
+        evaluated_movies = self.movies_le.transform(data[0])
+
+        movies_to_movies = self.vt.T @ self.vt  # (M x d) @ (d x M) = M x M
+
+        weights = user_norm_ratings[evaluated_movies]
+
+        predicted = (weights.reshape((-1, 1)) * movies_to_movies[evaluated_movies]).sum(axis=0)
+
+        return self._get_top_m_from_predicted(predicted, evaluated_movies, user_mean, top_m)
+
+    def _get_top_m_from_predicted(self, predicted, evaluated_movies, user_mean, top_m):
         ids = np.argsort(predicted)[::-1]  # top ids
-        ids = ids[~np.isin(ids, self.movies_le.transform(data[0]))]  # drop already marked movies
+        ids = ids[~np.isin(ids, evaluated_movies)]  # drop already marked movies
         ids = ids[:top_m]  # only first top_m
 
         old_ids = self.movies_le.inverse_transform(ids)
         ratings = (predicted[ids] + 1) * user_mean
+        ratings[ratings > 5] = 5
 
         logging.info("Predicted!")
 
