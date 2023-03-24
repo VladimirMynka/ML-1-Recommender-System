@@ -135,7 +135,7 @@ class Model_SVD(Model):
 
         predicted = (users_sims * users_to_movies).sum(axis=0) / users_sims.sum()
 
-        return self._get_top_m_from_predicted(predicted, evaluated_movies, user_mean, top_m)
+        return self._get_top_m_from_predicted(predicted, evaluated_movies, user_mean, top_m, data[1])
 
     def predict2(self, data: list, top_m: int, **kwargs) -> list:
         """
@@ -157,16 +157,16 @@ class Model_SVD(Model):
 
         predicted = (weights.reshape((-1, 1)) * movies_to_movies[evaluated_movies]).sum(axis=0)
 
-        return self._get_top_m_from_predicted(predicted, evaluated_movies, user_mean, top_m)
+        return self._get_top_m_from_predicted(predicted, evaluated_movies, user_mean, top_m, data[1])
 
-    def _get_top_m_from_predicted(self, predicted, evaluated_movies, user_mean, top_m):
+    def _get_top_m_from_predicted(self, predicted, evaluated_movies, user_mean, top_m, source_marks):
         ids = np.argsort(predicted)[::-1]  # top ids
         ids = ids[~np.isin(ids, evaluated_movies)]  # drop already marked movies
         ids = ids[:top_m]  # only first top_m
 
         old_ids = self.movies_le.inverse_transform(ids)
         ratings = (predicted[ids] + 1) * user_mean
-        ratings[ratings > 5] = 5
+        ratings = self._rescale_array(ratings, min(source_marks), max(source_marks))
 
         logging.info("Predicted!")
 

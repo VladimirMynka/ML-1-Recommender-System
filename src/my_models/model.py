@@ -3,6 +3,8 @@ import os
 from pathlib import Path
 from typing import Optional
 
+import numpy as np
+
 
 class Model:
     def __init__(self):
@@ -66,6 +68,15 @@ class Model:
         ] Descending sorting by similarity
         """
         pass
+
+    @staticmethod
+    def _rescale_array(array: np.ndarray, must_be_min: float = 0, must_be_max: float = 5) -> np.ndarray:
+        array = array.copy()
+        array -= np.min(array)
+        array /= np.max(array)
+        array *= (must_be_max - must_be_min)
+        array += must_be_min
+        return array
 
     def save(self, path: Optional[str | Path] = None) -> None:
         """
