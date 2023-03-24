@@ -41,6 +41,7 @@ class Model_SVD(Model):
         :param d: shape of the middle matrix in svd
         """
         data = read_files(["train"], [train_path])
+        self._create_encoders(data["train"])
         matrix = self._create_matrix(data["train"])
         normalized_matrix = self._normalize_matrix(matrix)
         self.u, self.s, self.vt = svds(normalized_matrix, k=d)
@@ -52,7 +53,7 @@ class Model_SVD(Model):
         logging.info(f"Trained! Train RMSE: {rmse}")
 
     def _prepare_matrix(self, train: pd.DataFrame) -> np.ndarray:
-        self._create_encoders(train)
+        self._create_encoders(data["train"])
         matrix = self._create_matrix(train)
         matrix = self._normalize_matrix(matrix)
         return matrix
