@@ -41,8 +41,9 @@ class Model_SVD(Model):
         :param d: shape of the middle matrix in svd
         """
         data = read_files(["train"], [train_path])
-        matrix = self._prepare_matrix(data["train"])
-        self.u, self.s, self.vt = svds(matrix, k=d)
+        matrix = self._create_matrix(data["train"])
+        normalized_matrix = self._normalize_matrix(matrix)
+        self.u, self.s, self.vt = svds(normalized_matrix, k=d)
         self.s = np.diag(self.s)
 
         rmse = self._calculate_rmse((matrix + 1) * self.users_means)
@@ -103,6 +104,7 @@ class Model_SVD(Model):
         return matrix
 
     def _normalize_matrix(self, matrix, replace_users_means: bool = True):
+        matrix = matrix.copy()
         if replace_users_means:
             self.users_means = np.nanmean(matrix, axis=1).reshape(-1, 1)
         matrix /= self.users_means
