@@ -53,7 +53,7 @@ class Model_SVD(Model):
         logging.info(f"Trained! Train RMSE: {rmse}")
 
     def _prepare_matrix(self, train: pd.DataFrame) -> np.ndarray:
-        self._create_encoders(data["train"])
+        self._create_encoders(train)
         matrix = self._create_matrix(train)
         matrix = self._normalize_matrix(matrix)
         return matrix
