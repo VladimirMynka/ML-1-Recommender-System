@@ -8,7 +8,7 @@ from src.my_models.model_svd import Model_SVD
 from src.utils import save_credentials, parse_credentials
 
 
-class model_service:
+class Model_Service:
     def __init__(self):
         self.model = Model_SVD()
         try:
@@ -31,10 +31,13 @@ class model_service:
         movies_copy = movies_copy.sort_values('sims', ascending=False)
         return movies_copy.iloc[0]['movie_id']
 
-    def predict(self, data, top_m):
+    def predict(self, data, top_m, predict_type='by_movies_to_movies'):
         movie_names, ratings = data
         movie_ids = [self.get_movie_id_by_name(movie_name) for movie_name in movie_names]
-        movie_new_ids, ratings = self.model.predict([movie_ids, ratings], top_m)
+        if predict_type == 'by_movies_to_movies':
+            movie_new_ids, ratings = self.model.predict2([movie_ids, ratings], top_m)
+        else:
+            movie_new_ids, ratings = self.model.predict([movie_ids, ratings], top_m)
         movie_names = self.model.get_movies_names(movie_new_ids)
         return [movie_names.tolist(), ratings]
 
