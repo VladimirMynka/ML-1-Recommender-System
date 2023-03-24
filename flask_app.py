@@ -18,9 +18,9 @@ app.logger = logging.getLogger()
 @app.route('/api/predict', methods=["POST"])
 def predict():
     args = request.json
-    data = args.get("data")
-    top_m = args.get("top_m", default=5)
-    predict_type = args.get("predict_type", default='by_movies_to_movies')
+    data = args["data"]
+    top_m = args["top_m"] if "top_m" in args else config.top_m
+    predict_type = args["predict_type"] if "predict_type" in args else config.predict_type_default
 
     return jsonify(model_service.predict(data, top_m, predict_type))
 
@@ -59,7 +59,7 @@ def similar():
 @app.errorhandler(500)
 def some_error(e):
     logging.info(str(e.original_exception))
-    return f"Application Error: {e}", 500
+    return f"Application Error: {e.original_exception}", 500
 
 
 if __name__ == "__main__":

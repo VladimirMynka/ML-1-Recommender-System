@@ -45,6 +45,8 @@ config = Config({
     'model': root_path / 'data' / 'model',
     'logging': root_path / 'data' / 'log_file.log',
     'logging_rows_output': 20,
+    'top_m_default': 5,
+    'predict_type_default': 'by_movies_to_movies',
 
     'credentials': {
         'model': root_path / 'credentials' / 'model_credentials.txt',
