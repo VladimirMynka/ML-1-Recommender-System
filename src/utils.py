@@ -44,12 +44,12 @@ def parse_credentials(path):
         text = f.read()
     lines = [line for line in text.split('\n') if len(line) > 0]
     lines = [line.split(': ') for line in lines]
-    result = {line[0]: line[1] for line in lines}
+    result = {line[0].split("___")[0]: line[1] for line in lines}
     return result
 
 
-def save_credentials(dictionary: dict, path: Path):
-    lines = [": ".join([key, dictionary[key]]) for key in dictionary]
+def save_credentials(dictionary: dict, path: Path, suffix: str = ""):
+    lines = [": ".join([f"{key}___{suffix}", dictionary[key]]) for key in dictionary]
     text = "\n".join(lines)
 
     path.parent.mkdir(parents=True, exist_ok=True)

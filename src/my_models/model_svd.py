@@ -52,12 +52,6 @@ class Model_SVD(Model):
 
         logging.info(f"Trained! Train RMSE: {rmse}")
 
-    def _prepare_matrix(self, train: pd.DataFrame) -> np.ndarray:
-        self._create_encoders(train)
-        matrix = self._create_matrix(train)
-        matrix = self._normalize_matrix(matrix)
-        return matrix
-
     def _create_encoders(self, train: pd.DataFrame) -> None:
         self.movies_le = LabelEncoder()
         self.users_le = LabelEncoder()
@@ -127,6 +121,11 @@ class Model_SVD(Model):
         user_norm_ratings, user_mean = self._prepare_one_user(data)  # (movies_count, )
         evaluated_movies = self.movies_le.transform(data[0])
 
+        predicted = self._get_predictions_by_users_to_movies(evaluated_movies, user_norm_ratings)
+
+        return self._get_top_m_from_predicted(predicted, evaluated_movies, user_mean, top_m, data[1])
+
+    def _get_predictions_by_users_to_movies(self, evaluated_movies, user_norm_ratings):
         users_to_movies = self.u @ self.s @ self.vt  # (users_count, movies_count)
 
         normalizer = np.sqrt((users_to_movies ** 2).sum(axis=1))[evaluated_movies]  # length of users vectors
@@ -137,8 +136,8 @@ class Model_SVD(Model):
                      / normalizer.reshape((-1, 1))
 
         predicted = (users_sims * users_to_movies).sum(axis=0) / users_sims.sum()
+        return predicted
 
-        return self._get_top_m_from_predicted(predicted, evaluated_movies, user_mean, top_m, data[1])
 
     def predict2(self, data: list, top_m: int, **kwargs) -> list:
         """
@@ -162,9 +161,21 @@ class Model_SVD(Model):
 
         return self._get_top_m_from_predicted(predicted, evaluated_movies, user_mean, top_m, data[1])
 
-    def _get_top_m_from_predicted(self, predicted, evaluated_movies, user_mean, top_m, source_marks):
+    def _get_top_m_from_predicted(
+        self,
+        predicted,
+        evaluated_movies,
+        user_mean,
+        top_m,
+        source_marks,
+        ignore_movies=None
+    ):
+        if ignore_movies is None:
+            ignore_movies = []
+        ignore_movies.extend(evaluated_movies)
+
         ids = np.argsort(predicted)[::-1]  # top ids
-        ids = ids[~np.isin(ids, evaluated_movies)]  # drop already marked movies
+        ids = ids[~np.isin(ids, ignore_movies)]  # drop already marked movies
         ids = ids[:top_m]  # only first top_m
 
         old_ids = self.movies_le.inverse_transform(ids)
@@ -242,6 +253,13 @@ class Model_SVD(Model):
         [movie_name_1, movie_name_2, .., movie_name_N]
         ] Descending sorting by similarity
         """
+        return self._find_similar(movie_id, N)
+
+    def _find_similar(self, movie_id: int, N: int, ignore_list: list = None):
+        if ignore_list is None:
+            ignore_list = []
+        ignore_list.append(movie_id)
+
         logging.info(f"Search {N} similar movies...")
         if movie_id not in self.movies_le.classes_:
             logging.error("Unknown movie_id")
@@ -250,7 +268,7 @@ class Model_SVD(Model):
         movies_to_movies = self.vt.T @ self.vt  # (M x d) @ (d x M) = M x M
         indexes = movies_to_movies[movie_id].argsort()[::-1]
 
-        indexes = indexes[indexes != movie_id]
+        indexes = indexes[np.isin(indexes, self.movies_le.transform(ignore_list))]
 
         old_indexes = self.movies_le.inverse_transform(indexes)
         old_indexes = old_indexes[:N]

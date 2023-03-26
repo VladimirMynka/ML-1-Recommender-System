@@ -5,12 +5,24 @@ from fuzzywuzzy.fuzz import ratio
 
 from src.config import config
 from src.my_models.model_svd import Model_SVD
+from src.my_models.model_svd_features import Model_SVD_With_Features
 from src.utils import save_credentials, parse_credentials
 
 
 class Model_Service:
-    def __init__(self):
-        self.model = Model_SVD()
+    def __init__(self, model_type="with_features"):
+        self.WITH_FEATURES = "with_features"
+
+        if model_type == self.WITH_FEATURES:
+            self.model = Model_SVD_With_Features()
+        else:
+            self.model = Model_SVD()
+
+        self.credentials_file = config.credentials.model_features \
+            if model_type == self.WITH_FEATURES \
+            else config.credentials.model
+        self.suffix = self.WITH_FEATURES if model_type == self.WITH_FEATURES else ""
+
         try:
             self.model.warmup()
         except:
@@ -18,11 +30,12 @@ class Model_Service:
             self.model.train()
             self.model.save()
             self.model.evaluate()
+
             save_credentials({
                 'train_rmse': str(self.model.train_rmse),
                 'test_rmse': str(self.model.test_rmse),
                 'model_datetime': str(datetime.now())
-            }, config.credentials.model)
+            }, self.credentials_file, self.suffix)
 
     def get_movie_id_by_name(self, movie_name):
         similarities = self.model.df_movies.title.apply(lambda elem: ratio(movie_name, elem))
@@ -48,7 +61,7 @@ class Model_Service:
     def reload(self):
         self.model.warmup()
         self.model.evaluate()
-        credentials = parse_credentials(config.credentials.model)
+        credentials = parse_credentials(self.credentials_file)
         credentials['test_rmse'] = str(self.model.test_rmse)
         credentials['model_datetime'] = str(datetime.now())
-        save_credentials(credentials, config.credentials.model)
+        save_credentials(credentials, self.credentials_file, self.suffix)

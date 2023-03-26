@@ -43,13 +43,18 @@ config = Config({
         }
     },
     'model': root_path / 'data' / 'model',
+    'model_features': root_path / 'data' / 'model_upgraded',
+
     'logging': root_path / 'data' / 'log_file.log',
     'logging_rows_output': 20,
     'top_m_default': 5,
     'predict_type_default': 'by_movies_to_movies',
 
+    'available_age_groups': [1, 18, 25, 35, 45, 50 ,56],
+
     'credentials': {
         'model': root_path / 'credentials' / 'model_credentials.txt',
+        'model_features': root_path / 'credentials' / 'model_features_credentials.txt',
         'common': root_path / 'credentials' / 'credentials.txt',
         'docker': root_path / 'credentials' / 'docker_credentials.txt'
     },

@@ -4,3 +4,4 @@ data/model
 .idea/*
 .ipynb_checkpoints/*
 credentials/*
+/data/model_upgraded/
