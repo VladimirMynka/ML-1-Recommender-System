@@ -138,7 +138,6 @@ class Model_SVD(Model):
         predicted = (users_sims * users_to_movies).sum(axis=0) / users_sims.sum()
         return predicted
 
-
     def predict2(self, data: list, top_m: int, **kwargs) -> list:
         """
         Get recommend movies for one user. Do it by movies_to_movies matrix
@@ -174,13 +173,14 @@ class Model_SVD(Model):
             ignore_movies = []
         ignore_movies.extend(evaluated_movies)
 
+        predicted = self._rescale_array(predicted, min(source_marks), max(source_marks))
+
         ids = np.argsort(predicted)[::-1]  # top ids
         ids = ids[~np.isin(ids, ignore_movies)]  # drop already marked movies
         ids = ids[:top_m]  # only first top_m
 
         old_ids = self.movies_le.inverse_transform(ids)
         ratings = (predicted[ids] + 1) * user_mean
-        ratings = self._rescale_array(ratings, min(source_marks), max(source_marks))
 
         logging.info("Predicted!")
 
